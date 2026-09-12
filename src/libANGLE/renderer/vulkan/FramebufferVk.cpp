@@ -18,6 +18,7 @@
 #include "libANGLE/Display.h"
 #include "libANGLE/ErrorStrings.h"
 #include "libANGLE/formatutils.h"
+#include "libANGLE/renderer/driver_utils.h"
 #include "libANGLE/renderer/renderer_utils.h"
 #include "libANGLE/renderer/vulkan/ContextVk.h"
 #include "libANGLE/renderer/vulkan/DisplayVk.h"
@@ -1264,6 +1265,11 @@ angle::Result FramebufferVk::blit(const gl::Context *context,
 {
     ContextVk *contextVk   = vk::GetImpl(context);
     vk::Renderer *renderer = contextVk->getRenderer();
+    // PowerVR Rogue drivers on affected Android devices can crash inside
+    // vkCmdBlitImage. The shader-based blit path below is already implemented
+    // for clipping, format conversion, and resolve operations.
+    const bool avoidVkCmdBlitImage =
+        IsPowerVR(renderer->getPhysicalDeviceProperties().vendorID);
     UtilsVk &utilsVk       = contextVk->getUtils();
 
     // If any clears were picked up when syncing the read framebuffer (as the blit source), restage
@@ -1485,7 +1491,7 @@ angle::Result FramebufferVk::blit(const gl::Context *context,
         // https://gitlab.khronos.org/vulkan/vulkan/-/issues/3490)
         //
         // For simplicity, we either blit all render targets with a Vulkan command, or none.
-        bool canBlitWithCommand = !isColorResolve && noClip &&
+        bool canBlitWithCommand = !avoidVkCmdBlitImage && !isColorResolve && noClip &&
                                   HasSrcBlitFeature(renderer, readRenderTarget) &&
                                   rotation == SurfaceRotation::Identity;
 
@@ -1699,7 +1705,8 @@ angle::Result FramebufferVk::blit(const gl::Context *context,
             AreSrcAndDstDepthStencilChannelsBlitCompatible(readRenderTarget, drawRenderTarget);
 
         // Similarly, only blit if there's been no clipping or rotating.
-        bool canBlitWithCommand = areChannelsBlitCompatible && !isDepthStencilResolve && noClip &&
+        bool canBlitWithCommand = !avoidVkCmdBlitImage && areChannelsBlitCompatible &&
+                                  !isDepthStencilResolve && noClip &&
                                   HasSrcBlitFeature(renderer, readRenderTarget) &&
                                   HasDstBlitFeature(renderer, drawRenderTarget) &&
                                   rotation == SurfaceRotation::Identity;
