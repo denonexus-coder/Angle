@@ -5686,8 +5686,9 @@ void Renderer::initFeatures(const vk::ExtensionNameList &deviceExtensionNames,
 
     // Affecting Nvidia drivers 535 through 551.
     ANGLE_FEATURE_CONDITION(&mFeatures, avoidOpSelectWithMismatchingRelaxedPrecision,
-                            isNvidia && (driverVersion >= angle::VersionTriple(535, 0, 0) &&
-                                         driverVersion < angle::VersionTriple(552, 0, 0)));
+                            isPowerVR ||
+                                (isNvidia && (driverVersion >= angle::VersionTriple(535, 0, 0) &&
+                                              driverVersion < angle::VersionTriple(552, 0, 0))));
 
     // Affecting Linux/Intel (unknown range).
     ANGLE_FEATURE_CONDITION(&mFeatures, wrapSwitchInIfTrue, isIntel && IsLinux());
@@ -6058,7 +6059,8 @@ void Renderer::initFeatures(const vk::ExtensionNameList &deviceExtensionNames,
 
     ANGLE_FEATURE_CONDITION(
         &mFeatures, supportsImageFormatList,
-        ExtensionFound(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME, deviceExtensionNames));
+        !isPowerVR &&
+            ExtensionFound(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME, deviceExtensionNames));
 
     ANGLE_FEATURE_CONDITION(
         &mFeatures, supportsSwapchainMutableFormat,
