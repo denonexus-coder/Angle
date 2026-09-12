@@ -18,6 +18,7 @@
 #include "libANGLE/Image.h"
 #include "libANGLE/MemoryObject.h"
 #include "libANGLE/Surface.h"
+#include "libANGLE/renderer/driver_utils.h"
 #include "libANGLE/renderer/renderer_utils.h"
 #include "libANGLE/renderer/vulkan/ContextVk.h"
 #include "libANGLE/renderer/vulkan/FramebufferVk.h"
@@ -2891,6 +2892,7 @@ angle::Result TextureVk::generateMipmap(const gl::Context *context)
 {
     ContextVk *contextVk   = vk::GetImpl(context);
     vk::Renderer *renderer = contextVk->getRenderer();
+    const bool isPowerVR   = IsPowerVR(renderer->getPhysicalDeviceProperties().vendorID);
 
     // The image should already be allocated by a prior syncState.
     ASSERT(mImage->valid());
@@ -2933,7 +2935,21 @@ angle::Result TextureVk::generateMipmap(const gl::Context *context)
         ASSERT((mImageUsageFlags & VK_IMAGE_USAGE_STORAGE_BIT) != 0);
         return generateMipmapsWithCompute(contextVk);
     }
-    else if (renderer->hasImageFormatFeatureBits(mImage->getActualFormatID(), kBlitFeatureFlags))
+    else if (isPowerVR &&
+             mImage->getType() == VK_IMAGE_TYPE_2D && mImage->getSamples() == 1 &&
+             (mImage->getUsage() & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) != 0 &&
+             vk::FormatHasNecessaryFeature(renderer, mImage->getActualFormatID(),
+                                           mImage->getTilingMode(),
+                                           VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT))
+    {
+        // PowerVR Rogue drivers used on several Android devices have a broken
+        // vkCmdBlitImage implementation. Use ANGLE's shader path instead.
+        return contextVk->getUtils().generateMipmapWithDraw(
+            contextVk, mImage, mImage->getActualFormatID(),
+            gl::IsMipmapFiltered(mState.getSamplerState().getMinFilter()));
+    }
+    else if (!isPowerVR &&
+             renderer->hasImageFormatFeatureBits(mImage->getActualFormatID(), kBlitFeatureFlags))
     {
         // Otherwise, use blit if possible.
         return mImage->generateMipmapsWithBlit(contextVk, baseLevel, maxLevel);
