@@ -1,0 +1,28 @@
+# Copyright 2019 The ANGLE Project Authors.
+# Configuração para compilar bibliotecas estáticas ANGLE
+
+# Define se deve compilar como biblioteca estática ou compartilhada
+if (!defined(angle_shared_libaries)) {
+  angle_shared_libraries = false
+}
+
+# Se é static build, define estes valores
+if (!angle_shared_libraries) {
+  # Força bibliotecas estáticas
+  angle_shared_library_suffix = ""
+  
+  # Configuração para libEGL
+  if (!defined(build_egl_static)) {
+    build_egl_static = true
+  }
+  
+  # Configuração para libGLESv2  
+  if (!defined(build_glesv2_static)) {
+    build_glesv2_static = true
+  }
+  
+  # Configuração para libGLESv1_CM
+  if (!defined(build_glesv1_cm_static)) {
+    build_glesv1_cm_static = true
+  }
+}
