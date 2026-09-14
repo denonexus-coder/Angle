@@ -1453,7 +1453,7 @@ angle_static_library("libANGLE_static") {
     ":angle_static_build_config",
     ":libANGLE_config",
   ]
-  configs = [ ":debug_annotations_config" ]
+  configs += [ ":debug_annotations_config" ]
 
   if (angle_link_glx) {
     libs += [ "GL" ]
