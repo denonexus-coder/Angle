@@ -5,7 +5,7 @@ baseline**. `arm64-v8a` describes the Android ABI; it does not mean ARMv8.1
 or newer. The GN configuration emits `-march=armv8-a` and never uses
 `-mcpu=native`.
 
-The Android API level is fixed at **26** in this configuration. It is separate
+The Android API level is fixed at **29** in this configuration. It is separate
 from the ARM instruction-set baseline.
 
 ## Dependencies
