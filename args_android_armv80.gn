@@ -48,9 +48,6 @@ angle_enable_cl_passthrough = false
 # Android Specific Configuration
 # ============================================================================
 
-# Android NDK API level used by this configuration.
-android_ndk_api_level = 26
-
 # Library naming - use _angle suffix for Android
 angle_libs_suffix = "_angle"
 
