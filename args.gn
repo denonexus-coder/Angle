@@ -1,0 +1,31 @@
+# Configuração para compilar ANGLE como bibliotecas estáticas (.a)
+# Não compartilhadas (.so)
+
+# Desabilita component build (necessário para static linking)
+is_component_build = false
+
+# Força static linking de ANGLE
+angle_use_static_angle = true
+angle_static_linking = true
+
+# Configurações de plataforma padrão
+# Para Windows
+# target_os = "win"
+# target_cpu = "x64"
+
+# Para Linux
+# target_os = "linux"
+# target_cpu = "x64"
+
+# Para Android
+# target_os = "android"
+# target_cpu = "arm64"
+
+# Desabilita testes por padrão
+angle_build_tests = false
+
+# Release build
+is_debug = false
+
+# Usa símbolos para debug mesmo em release
+symbol_level = 1
