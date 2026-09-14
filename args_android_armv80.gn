@@ -112,7 +112,7 @@ angle_vulkan_display_mode = "simple"
 # ============================================================================
 
 # Disable non-conformant extensions
-angle_expose_non_conformant_extensions_and_versions = false
+angle_expose_non_conformant_extensions_and_versions = true
 
 # Disable explicit context (saves binary size)
 angle_enable_explicit_context = false
