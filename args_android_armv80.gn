@@ -1,144 +1,58 @@
-# ANGLE Android ARMv8.0-A Strict Build Configuration
-# This file contains GN arguments for building ANGLE for Android arm64-v8a
-# with strict ARMv8.0-A baseline ISA compatibility.
-#
-# "v8.0" here is intentional: this configuration must not enable ARMv8.1-A
-# or newer instruction-set extensions.  The Android API level is a separate
-# setting and is kept at the exact baseline supported by this checkout.
+# Copyright 2019 The ANGLE Project Authors.
+# Configuração para Android ARM64 (API Level 26+)
 
-# ============================================================================
-# Target Platform Configuration
-# ============================================================================
+# Importar configuração base do ANGLE
+import("//gni/angle.gni")
 
-# Android platform
-target_os = "android"
-target_cpu = "arm64"
+# ===== CONFIGURAÇÕES DE BUILD =====
+# Habilitar build ESTÁTICO
+angle_static_linking = true
+angle_use_static_angle = true
+is_component_build = false  # ⚠️ CRÍTICO: Desabilita component build
 
-# Build type - Release for production
-is_debug = false
-is_component_build = false
+# Forçar bibliotecas estáticas (não compartilhadas)
+angle_enable_shared_egl = false
+angle_enable_shared_glesv2 = false
 
-# ============================================================================
-# ARMv8.0-A Strict ISA Configuration
-# ============================================================================
+# ===== EXPORTAR SÍMBOLOS PARA LTW =====
+angle_export_egl_symbols = true
+angle_export_gles_symbols = true
+angle_ltw_compatibility = true
 
-# Force ARMv8.0-A baseline (no ARMv8.1+ extensions)
-# ARMv8.0-A includes: AArch64 baseline + NEON/Advanced SIMD
-# Explicitly excludes: LSE atomics, CRC32, FP16, Dot Product, SVE, SVE2, I8MM, BF16
-current_cpu = "arm64"
-
-# ============================================================================
-# Backend Configuration - Vulkan Only for Android
-# ============================================================================
-
-# Enable Vulkan backend (required for Android)
+# ===== BACKENDS =====
+# Apenas Vulkan (desabilitar outros para reduzir tamanho)
 angle_enable_vulkan = true
-
-# Disable all other backends for Android ARMv8.0-A strict builds
 angle_enable_gl = false
 angle_enable_d3d11 = false
 angle_enable_metal = false
-angle_enable_swiftshader = false
 angle_enable_null = false
 angle_enable_wgpu = false
+angle_enable_swiftshader = false
 angle_enable_cl = false
 angle_enable_cl_passthrough = false
 
-# ============================================================================
-# Android Specific Configuration
-# ============================================================================
+# ===== PLATAFORMA =====
+# Android ARM64
+target_os = "android"
+target_cpu = "arm64"
+android_ndk_api_level = 26
 
-# Library naming - use _angle suffix for Android
-angle_libs_suffix = "_angle"
+# ===== OTIMIZAÇÕES =====
+# Build de release
+is_debug = false
+is_official_build = true
 
-# Disable features that may require higher ARMv8 versions
-angle_enable_vulkan_validation_layers = false
-angle_enable_vulkan_api_dump_layer = false
-angle_debug_layers_enabled = false
+# Otimização para tamanho
+angle_enable_global_mutex_load_time_allocate = true
+angle_enable_global_mutex_recursion = false
 
-# ============================================================================
-# Optimization Configuration
-# ============================================================================
-
-# Use optimization level suitable for release builds.
-# -O2 is standard; the compiler architecture flags are supplied by
-# build_overrides/armv8_android.gni and applied from BUILD.gn.
-symbol_level = 0
-use_thin_lto = false
-arm_control_flow_integrity = "none"
-is_cfi = false
-use_remoteexec = false
-
-# ============================================================================
-# Test Configuration
-# ============================================================================
-
-# Disable tests for production build
-angle_build_tests = false
-build_angle_deqp_tests = false
-build_angle_end2end_tests_library = false
-
-# ============================================================================
-# Additional Configuration
-# ============================================================================
-
-# Disable assert always on for release
-angle_assert_always_on = false
-
-# Disable trace features for production
-trace_enabled = false
+# Desabilitar features desnecessários
 angle_enable_trace = false
 angle_enable_trace_android_logcat = false
 angle_enable_trace_events = false
-
-# Disable memory allocation logging
-angle_enable_memory_alloc_logging = false
-
-# Disable unwind backtrace support
+angle_enable_debug_layers = false
+angle_enable_perf_counter_output = false
 angle_enable_unwind_backtrace_support = false
-
-# Disable partition alloc for standalone builds
-checkout_angle_partition_alloc = false
-angle_use_partition_alloc = false
-
-# ============================================================================
-# Vulkan Display Configuration
-# ============================================================================
-
-# Use simple display mode for Android
-angle_vulkan_display_mode = "simple"
-
-# ============================================================================
-# Feature Flags
-# ============================================================================
-
-# Expose ES 3.2 and ANGLE's non-conformant extension/version entry points.
-angle_expose_non_conformant_extensions_and_versions = true
-
-# Disable explicit context (saves binary size)
-angle_enable_explicit_context = false
-
-# Disable share context lock for better performance
-angle_enable_share_context_lock = false
-
-# Global mutex configuration for Android
-angle_use_android_tls_slot = true
-angle_enable_global_mutex_recursion = false
-angle_enable_global_mutex_load_time_allocate = false
-angle_enable_context_mutex = true
-angle_enable_context_mutex_recursion = false
-
-# Disable capture by default
-angle_with_capture_by_default = false
-
-# ============================================================================
-# Build Configuration Summary
-# ============================================================================
-# This configuration produces:
-# - Android arm64-v8a libraries
-# - ARMv8.0-A strict ISA (no ARMv8.1-A or newer instruction extensions)
-# - Vulkan backend only
-# - Release build with optimizations
-# - Libraries: libEGL_angle.so, libGLESv2_angle.so
-# - Android API level: 26
-# ============================================================================
+angle_enable_memory_alloc_logging = false
+angle_build_tests = false
+angle_build_all = false
