@@ -1,6 +1,10 @@
 # ANGLE Android ARMv8.0-A Strict Build Configuration
 # This file contains GN arguments for building ANGLE for Android arm64-v8a
-# with strict ARMv8.0-A baseline ISA compatibility
+# with strict ARMv8.0-A baseline ISA compatibility.
+#
+# "v8.0" here is intentional: this configuration must not enable ARMv8.1-A
+# or newer instruction-set extensions.  The Android API level is a separate
+# setting and is kept at the exact baseline supported by this checkout.
 
 # ============================================================================
 # Target Platform Configuration
@@ -44,8 +48,7 @@ angle_enable_cl_passthrough = false
 # Android Specific Configuration
 # ============================================================================
 
-# Android NDK API level - minimum supported by this ANGLE version
-# Check the actual minimum supported by the fork
+# Android NDK API level used by this configuration.
 android_ndk_api_level = 26
 
 # Library naming - use _angle suffix for Android
@@ -60,8 +63,9 @@ angle_debug_layers_enabled = false
 # Optimization Configuration
 # ============================================================================
 
-# Use optimization level suitable for release builds
-# -O2 is standard, -Oz for size optimization
+# Use optimization level suitable for release builds.
+# -O2 is standard; the compiler architecture flags are supplied by
+# build_overrides/armv8_android.gni and applied from BUILD.gn.
 symbol_level = 0
 use_thin_lto = false
 arm_control_flow_integrity = "none"
@@ -111,7 +115,7 @@ angle_vulkan_display_mode = "simple"
 # Feature Flags
 # ============================================================================
 
-# Disable non-conformant extensions
+# Expose ES 3.2 and ANGLE's non-conformant extension/version entry points.
 angle_expose_non_conformant_extensions_and_versions = true
 
 # Disable explicit context (saves binary size)
@@ -135,9 +139,9 @@ angle_with_capture_by_default = false
 # ============================================================================
 # This configuration produces:
 # - Android arm64-v8a libraries
-# - ARMv8.0-A strict ISA (no ARMv8.1+ instructions)
+# - ARMv8.0-A strict ISA (no ARMv8.1-A or newer instruction extensions)
 # - Vulkan backend only
 # - Release build with optimizations
 # - Libraries: libEGL_angle.so, libGLESv2_angle.so
-# - Minimum Android API level: 26
+# - Android API level: 26
 # ============================================================================

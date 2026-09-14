@@ -1,0 +1,11 @@
+# Overrides used by the standalone Android static configuration.
+#
+# Keep these values exact for the arm64-v8a/ARMv8.0-A target.  Do not turn
+# this into an API-level range: the build is intentionally reproducible at
+# API 26.
+declare_args() {
+  target_os = "android"
+  target_cpu = "arm64"
+  current_cpu = "arm64"
+  android_ndk_api_level = 26
+}

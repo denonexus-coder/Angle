@@ -144,6 +144,12 @@ diag.txt
 ipch
 lib/*
 out
+/out/
+/*.a
+/*.so
+.ninja_*
+.ninja_log
+.ninja_deps
 patches-*
 Release/
 Release_ARM/

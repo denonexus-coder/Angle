@@ -12,6 +12,9 @@ declare_args() {
   angle_armv80_arch_flags = [
     "-march=armv8-a",
     "-mtune=generic",
+    # Do not emit calls to compiler-generated LSE atomics; use the ARMv8.0
+    # LL/SC sequence instead.
+    "-mno-outline-atomics",
   ]
 
   angle_armv80_asm_flags = [

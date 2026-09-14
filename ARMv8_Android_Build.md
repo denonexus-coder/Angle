@@ -19,15 +19,9 @@ This fork of ANGLE has been configured to produce builds that are **strictly com
 #### `build_overrides/armv8_android.gni`
 - Defines ARMv8.0-A strict compiler flags:
   - `-march=armv8-a` (ARMv8.0-A baseline)
-  - `-mno-outline-atomics` (disable LSE atomics from ARMv8.1)
-  - `-mno-crc` (disable CRC32 from ARMv8.1)
-  - `-mno-fp16` (disable FP16 from ARMv8.2)
-  - `-mno-dotprod` (disable Dot Product from ARMv8.2/8.4)
-  - `-mno-sve` (disable SVE from ARMv8.2+)
-  - `-mno-sve2` (disable SVE2 from ARMv8.4+)
-  - `-mno-i8mm` (disable I8MM from ARMv8.2+)
-  - `-mno-bf16` (disable BF16 from ARMv8.6+)
   - `-mtune=generic` (prevent native CPU optimization)
+  - `-mno-outline-atomics` (keep atomics on the ARMv8.0 LL/SC path)
+- `BUILD.gn` applies those flags to C, C++, and assembly actions.
 - Forces Vulkan-only backend for Android
 - Disables all other backends (D3D11, Metal, GL, SwiftShader, Null, WGPU)
 - Ensures library naming with `_angle` suffix
@@ -102,14 +96,15 @@ Comprehensive validation script that checks:
 #### Step 1: Generate Build Files
 
 ```bash
-# Using the provided args file
-gn gen out/Android-arm64-v8 --args=args_android_armv80.gn
+# Using the provided args file.  The API level is fixed at 26; the
+# instruction-set target is exactly ARMv8.0-A.
+gn gen out/Android-arm64-v8 --args='import("//args/android_arm64_release.gn")'
 ```
 
 #### Step 2: Build ANGLE
 
 ```bash
-# Build all ANGLE libraries
+# Build the shared ANGLE libraries
 autoninja -C out/Android-arm64-v8
 ```
 

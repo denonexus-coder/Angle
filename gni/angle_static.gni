@@ -1,0 +1,15 @@
+# Shared arguments for ANGLE static-library builds.
+
+declare_args() {
+  # Select the static ANGLE targets in the standalone build.
+  angle_static_linking = false
+
+  # Static archives do not have a dynamic export table.  These switches are
+  # consumed by the static API config so public EGL/GLES declarations remain
+  # visible to the final embedder.
+  angle_export_egl_symbols = true
+  angle_export_gles_symbols = true
+
+  # Enables the compile-time contract used by downstream static embedders.
+  angle_ltw_compatibility = false
+}

@@ -436,6 +436,11 @@ angle_common_configs = [
   angle_root + ":angle_uwp_env",
 ]
 
+if (is_android && target_cpu == "arm64" && defined(angle_armv80_strict) &&
+    angle_armv80_strict) {
+  angle_common_configs += [ angle_root + ":angle_armv80_config" ]
+}
+
 angle_remove_configs = []
 
 if (angle_has_build) {

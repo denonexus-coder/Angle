@@ -3,8 +3,9 @@
 # found in the LICENSE file.
 
 # import the ozone_platform_x11 variable
-import("gni/angle.gni")
 import("//build_overrides/armv8_android.gni")
+import("gni/angle.gni")
+import("gni/angle_static.gni")
 if (angle_enable_vulkan) {
   import("//build_overrides//vulkan_headers.gni")
 }
@@ -153,6 +154,17 @@ import("src/libGLESv2.gni")
 # ones).
 config("external_config") {
   include_dirs = [ "include" ]
+}
+
+config("angle_armv80_config") {
+  if (is_android && target_cpu == "arm64" && angle_armv80_strict) {
+    # ARM64 v8.0-A baseline only.  Do not replace this with -mcpu=native or
+    # an ARMv8.1+ target: arm64-v8a is the ABI, while this flag controls the
+    # instruction set actually emitted by the compiler.
+    cflags = angle_armv80_arch_flags
+    cflags_cc = angle_armv80_arch_flags
+    asmflags = angle_armv80_asm_flags
+  }
 }
 
 # Prevent the GL headers from redeclaring ANGLE entry points.
@@ -1031,6 +1043,21 @@ config("angle_backend_config") {
   }
 }
 
+config("angle_static_build_config") {
+  if (angle_static_linking) {
+    defines = [ "ANGLE_STATIC=1" ]
+    if (angle_ltw_compatibility) {
+      defines += [ "ANGLE_LTW_COMPATIBILITY=1" ]
+    }
+    if (angle_export_egl_symbols) {
+      defines += [ "ANGLE_EXPORT_EGL_SYMBOLS=1" ]
+    }
+    if (angle_export_gles_symbols) {
+      defines += [ "ANGLE_EXPORT_GLES_SYMBOLS=1" ]
+    }
+  }
+}
+
 config("libANGLE_config") {
   cflags = []
   defines = []
@@ -1395,6 +1422,83 @@ libANGLE_template("libANGLE") {
   }
 }
 
+angle_static_library("libANGLE_static") {
+  output_name = "libANGLE"
+  output_dir = "$root_out_dir"
+  sources = libangle_sources
+  if (angle_enable_cl) {
+    sources += libangle_cl_sources
+    configs += [ ":opencl_no_pragma_messages" ]
+  }
+
+  defines = []
+  include_dirs = []
+  libs = []
+  public_deps = [
+    ":angle_common",
+    ":angle_common_shader_state",
+    ":angle_gpu_info_util",
+    ":angle_image_util",
+    ":angle_version_info",
+    ":libANGLE_headers",
+    ":translator",
+  ]
+  deps = [
+    ":angle_compression",
+    ":includes",
+  ]
+  public_configs = [
+    ":angle_backend_config",
+    ":angle_static_config",
+    ":angle_static_build_config",
+    ":libANGLE_config",
+  ]
+  configs = [ ":debug_annotations_config" ]
+
+  if (angle_link_glx) {
+    libs += [ "GL" ]
+    defines += [ "ANGLE_LINK_GLX" ]
+  }
+
+  if (angle_enable_d3d11) {
+    public_deps += [ "src/libANGLE/renderer/d3d:angle_d3d11_backend" ]
+  }
+  if (angle_enable_gl) {
+    public_deps += [ "src/libANGLE/renderer/gl:angle_gl_backend" ]
+  }
+  if (angle_enable_null) {
+    public_deps += [ "src/libANGLE/renderer/null:angle_null_backend" ]
+  }
+  if (angle_enable_wgpu) {
+    public_deps += [ "src/libANGLE/renderer/wgpu:angle_wgpu_backend" ]
+  }
+  if (angle_enable_metal) {
+    public_deps += [ "src/libANGLE/renderer/metal:angle_metal_backend" ]
+  }
+  if (angle_enable_cl_passthrough) {
+    public_deps += [ "src/libANGLE/renderer/cl:angle_cl_backend" ]
+  }
+  if (angle_enable_vulkan) {
+    public_deps += [ "src/libANGLE/renderer/vulkan:angle_vulkan_backend" ]
+  }
+
+  if (is_apple) {
+    sources += libangle_mac_sources
+  }
+  if (is_ios) {
+    sources += [ "src/libANGLE/renderer/driver_utils_ios.mm" ]
+  }
+  if (is_win && !angle_is_winuwp) {
+    libs += [
+      "gdi32.lib",
+      "user32.lib",
+    ]
+  }
+  if (angle_enable_d3d11) {
+    libs += [ "dxguid.lib" ]
+  }
+}
+
 if (angle_enable_vulkan) {
   libANGLE_template("libANGLE_vulkan_secondaries") {
     public_deps =
@@ -1460,6 +1564,15 @@ config("angle_static_config") {
     "GL_APICALL=",
     "GL_API=",
   ]
+  if (angle_ltw_compatibility) {
+    defines += [ "ANGLE_LTW_COMPATIBILITY=1" ]
+  }
+  if (angle_export_egl_symbols) {
+    defines += [ "ANGLE_EXPORT_EGL_SYMBOLS=1" ]
+  }
+  if (angle_export_gles_symbols) {
+    defines += [ "ANGLE_EXPORT_GLES_SYMBOLS=1" ]
+  }
 }
 
 set_defaults("angle_libGLESv2") {
@@ -1534,6 +1647,8 @@ if (angle_has_frame_capture) {
 }
 
 angle_static_library("libGLESv2_thin_static") {
+  output_name = "libGLESv2_thin"
+  output_dir = "$root_out_dir"
   sources = libglesv2_entry_point_sources
   if (angle_enable_cl) {
     sources += libglesv2_cl_sources
@@ -1542,10 +1657,12 @@ angle_static_library("libGLESv2_thin_static") {
 
   public_configs += [ ":angle_static_config" ]
   deps = [ ":includes" ]
-  public_deps = [ ":libANGLE" ]
+  public_deps = [ ":libANGLE_static" ]
 }
 
 angle_static_library("libGLESv2_static") {
+  output_name = "libGLESv2"
+  output_dir = "$root_out_dir"
   sources = libglesv2_sources
   public_deps = [ ":libGLESv2_thin_static" ]
 }
@@ -1664,7 +1781,12 @@ if (angle_enable_vulkan) {
 
 libEGL_template("libEGL_static") {
   target_type = "angle_static_library"
-  public_configs = [ ":angle_static_config" ]
+  output_name = "libEGL"
+  output_dir = "$root_out_dir"
+  public_configs = [
+    ":angle_static_config",
+    ":angle_static_build_config",
+  ]
   deps = [ ":libGLESv2_static" ]
 }
 
@@ -1915,6 +2037,7 @@ group("angle") {
 
 group("angle_static") {
   public_deps = [
+    ":libANGLE_static",
     ":libEGL_static",
     ":libGLESv2_static",
     ":preprocessor",

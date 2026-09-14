@@ -1,0 +1,44 @@
+# Static Android ARM64-v8a build.
+#
+# This imports the repository's ARMv8.0-A baseline configuration.  It does
+# not mean "ARMv8.0 or newer": -march=armv8-a is applied to every ANGLE
+# compile and assembly action by BUILD.gn.
+import("//args_android_armv80.gn")
+import("//build_overrides/android_static.gni")
+import("//gni/angle_static.gni")
+
+angle_use_static_angle = true
+angle_static_linking = true
+
+is_debug = false
+is_component_build = false
+symbol_level = 0
+use_thin_lto = false
+
+# Vulkan is the only renderer in this target.
+angle_enable_vulkan = true
+angle_enable_gl = false
+angle_enable_d3d11 = false
+angle_enable_metal = false
+angle_enable_swiftshader = false
+angle_enable_null = false
+angle_enable_wgpu = false
+angle_enable_cl = false
+angle_enable_cl_passthrough = false
+
+# Keep the static output small and deterministic.
+angle_build_tests = false
+build_angle_deqp_tests = false
+build_angle_end2end_tests_library = false
+angle_with_capture_by_default = false
+angle_enable_vulkan_validation_layers = false
+angle_enable_vulkan_api_dump_layer = false
+angle_debug_layers_enabled = false
+angle_assert_always_on = false
+angle_enable_trace = false
+angle_enable_trace_android_logcat = false
+angle_enable_trace_events = false
+angle_enable_memory_alloc_logging = false
+angle_enable_unwind_backtrace_support = false
+angle_use_partition_alloc = false
+checkout_angle_partition_alloc = false

@@ -1,0 +1,30 @@
+# Shared-library Android ARM64-v8a release build.
+#
+# The architecture is strictly ARMv8.0-A; this file is not an ARMv8.1+
+# configuration.
+import("//args_android_armv80.gn")
+
+is_debug = false
+is_component_build = false
+symbol_level = 0
+use_thin_lto = false
+angle_use_static_angle = false
+
+angle_enable_vulkan = true
+angle_enable_gl = false
+angle_enable_d3d11 = false
+angle_enable_metal = false
+angle_enable_swiftshader = false
+angle_enable_null = false
+angle_enable_wgpu = false
+angle_enable_cl = false
+angle_enable_cl_passthrough = false
+
+angle_build_tests = false
+build_angle_deqp_tests = false
+build_angle_end2end_tests_library = false
+angle_with_capture_by_default = false
+angle_enable_vulkan_validation_layers = false
+angle_enable_vulkan_api_dump_layer = false
+angle_debug_layers_enabled = false
+angle_assert_always_on = false
