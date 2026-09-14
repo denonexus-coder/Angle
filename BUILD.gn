@@ -1270,6 +1270,113 @@ if (angle_use_wayland) {
     ]
   }
 
+# =============================================================================
+# TARGETS PRINCIPAIS PARA BUILD ESTÁTICO (.a)
+# =============================================================================
+
+# --- libEGL (Biblioteca EGL) ---
+static_library("libEGL") {
+  sources = libegl_sources
+  configs = [ ":libEGL_config" ]
+  public_deps = [ ":libGLESv2" ]
+  public_configs = [ ":angle_static_config" ]
+
+  # Dependências do sistema para Android
+  if (is_android && (angle_enable_gl || angle_enable_vulkan)) {
+    if (ndk_api_level_at_least_26) {
+      libs = [ "nativewindow" ]
+    } else {
+      libs = [ "android" ]
+    }
+  }
+}
+
+# --- libGLESv2 (Biblioteca GLESv2) ---
+static_library("libGLESv2") {
+  sources = libglesv2_sources
+  configs = [ ":libGLESv2_config" ]
+  public_deps = [ ":libANGLE" ]
+  public_configs = [ ":angle_static_config" ]
+
+  # Dependências do sistema para Android
+  if (is_android && (angle_enable_gl || angle_enable_vulkan)) {
+    if (ndk_api_level_at_least_26) {
+      libs = [ "nativewindow" ]
+    } else {
+      libs = [ "android" ]
+    }
+  }
+}
+
+# --- libANGLE (Biblioteca principal do ANGLE) ---
+static_library("libANGLE") {
+  sources = libangle_sources
+  if (angle_enable_cl) {
+    sources += libangle_cl_sources
+  }
+
+  configs = [ ":libANGLE_config" ]
+  public_configs = [ ":angle_static_config" ]
+  public_deps = [
+    ":angle_common",
+    ":angle_common_shader_state",
+    ":angle_gpu_info_util",
+    ":angle_image_util",
+    ":angle_version_info",
+    ":libANGLE_headers",
+    ":translator",
+  ]
+  deps = [ ":angle_compression", ":includes" ]
+
+  # Backends
+  if (angle_enable_d3d11) {
+    public_deps += [ "src/libANGLE/renderer/d3d:angle_d3d11_backend" ]
+  }
+  if (angle_enable_gl) {
+    public_deps += [ "src/libANGLE/renderer/gl:angle_gl_backend" ]
+  }
+  if (angle_enable_null) {
+    public_deps += [ "src/libANGLE/renderer/null:angle_null_backend" ]
+  }
+  if (angle_enable_vulkan) {
+    public_deps += [ "src/libANGLE/renderer/vulkan:angle_vulkan_backend" ]
+  }
+  if (angle_enable_metal) {
+    public_deps += [ "src/libANGLE/renderer/metal:angle_metal_backend" ]
+  }
+  if (angle_enable_wgpu) {
+    public_deps += [ "src/libANGLE/renderer/wgpu:angle_wgpu_backend" ]
+  }
+
+  # Dependências do sistema
+  if (is_win && !angle_is_winuwp) {
+    libs = [ "gdi32.lib", "user32.lib" ]
+  }
+  if (angle_enable_d3d11) {
+    libs += [ "dxguid.lib" ]
+  }
+  if (is_android && (angle_enable_gl || angle_enable_vulkan)) {
+    if (ndk_api_level_at_least_26) {
+      libs += [ "nativewindow" ]
+    } else {
+      libs += [ "android" ]
+    }
+  }
+
+  # Configuração para debug
+  if (is_debug) {
+    defines += [ "ANGLE_GENERATE_SHADER_DEBUG_INFO" ]
+  }
+  if (build_with_chromium) {
+    defines += [ "ANGLE_ALWAYS_REPORT_VALIDATION_ERRORS" ]
+  }
+
+  configs += [ ":debug_annotations_config" ]
+  if (_use_copy_compiler_dll) {
+    data_deps = [ ":copy_compiler_dll" ]
+  }
+}
+
   group("angle_wayland") {
     public_configs = [ ":angle_wayland_config" ]
 
