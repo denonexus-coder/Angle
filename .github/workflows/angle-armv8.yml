@@ -215,9 +215,9 @@ jobs:
           elif autoninja -C out/AndroidArmv8 -t targets 2>/dev/null | grep -q 'AngleLibraries'; then
             autoninja -C out/AndroidArmv8 AngleLibraries
           else
-            autoninja -C out/AndroidArmv8 libEGL libGLESv2 libGLESv1_CM || \
-            autoninja -C out/AndroidArmv8 libEGL_angle libGLESv2_angle || \
-            autoninja -C out/AndroidArmv8
+            autoninja -C out/AndroidArmv8 \
+              libEGL libGLESv2 libGLESv1_CM \
+              libEGL_static libGLESv2_static libGLESv2_thin_static
           fi
 
       - name: Collect .so and verify pure ARMv8.0
@@ -226,8 +226,15 @@ jobs:
           set -eux
           mkdir -p /tmp/angle-libs
 
-          find out/AndroidArmv8 -type f \( -name 'libEGL*.so' -o -name 'libGLES*.so' -o -name 'libfeature_support*.so' -o -name 'libANGLE*.so' \) \
-            -exec cp -v {} /tmp/angle-libs/ \; || true
+          find out/AndroidArmv8 -type f \( \
+            -name 'libEGL*.so' -o \
+            -name 'libGLES*.so' -o \
+            -name 'libfeature_support*.so' -o \
+            -name 'libANGLE*.so' -o \
+            -name 'libEGL_static*.a' -o \
+            -name 'libGLESv2_static*.a' -o \
+            -name 'libGLESv2_thin_static*.a' \
+          \) -exec cp -v {} /tmp/angle-libs/ \; || true
 
           find out/AndroidArmv8 -type f -name '*.apk' | while read -r apk; do
             unzip -o -j "$apk" '*.so' -d /tmp/angle-libs/ 2>/dev/null || true
