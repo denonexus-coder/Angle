@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - es3-mobileglues
 
 permissions:
   contents: read
@@ -14,7 +15,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     env:
-      DEPOT_TOOLS_UPDATE: "1"
+      DEPOT_TOOLS_UPDATE: "0"
       DEPOT_TOOLS_METRICS: "0"
       GCLIENT_PY3: "1"
       DEBIAN_FRONTEND: "noninteractive"
@@ -25,6 +26,38 @@ jobs:
         with:
           path: angle
           fetch-depth: 1
+
+      - name: Cache depot_tools
+        uses: actions/cache@v3
+        id: cache-depot-tools
+        with:
+          path: |
+            ~/depot_tools
+            ~/cache
+          key: depot-tools-ubuntu-24-04-${{ hashFiles('.github/workflows/angle-armv8.yml') }}
+          restore-keys: |
+            depot-tools-ubuntu-24-04-
+
+      - name: Cache Android NDK/SDK
+        uses: actions/cache@v3
+        id: cache-android-ndk
+        with:
+          path: |
+            angle/third_party/android_toolchain
+          key: android-ndk-26-${{ hashFiles('.github/workflows/angle-armv8.yml') }}
+          restore-keys: |
+            android-ndk-26-
+
+      - name: Cache Build Artifacts
+        uses: actions/cache@v3
+        id: cache-build
+        with:
+          path: |
+            angle/out
+            angle/obj
+          key: build-armv8-${{ github.sha }}
+          restore-keys: |
+            build-armv8-
 
       - name: Install Linux build dependencies
         run: |
@@ -38,6 +71,7 @@ jobs:
             python3 python3-pip unzip zip file binutils lsb-release
 
       - name: Bootstrap depot_tools
+        if: steps.cache-depot-tools.outputs.cache-hit != 'true'
         run: |
           rm -rf "$HOME/depot_tools"
           git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git "$HOME/depot_tools"
@@ -78,7 +112,7 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           set -eux
-          export PATH="$HOME/depot_tools:$PATH"
+          export PATH="$HOME/depot_tools:$(pwd)/angle/buildtools/linux64:$PATH"
 
           mkdir -p angle/buildtools/linux64
 
@@ -110,13 +144,11 @@ jobs:
           fi
 
           test -n "$GN_SRC"
-          
           cp -v "$GN_SRC" angle/buildtools/linux64/gn
           chmod +x angle/buildtools/linux64/gn
-
           ls -la angle/buildtools/linux64/
           angle/buildtools/linux64/gn --version
-          
+
       - name: Force pure ARMv8.0 codegen (patch)
         working-directory: ${{ github.workspace }}
         run: |
@@ -140,7 +172,7 @@ jobs:
 
               if path.name == "BUILD.gn" and "android" in str(path):
                   marker = "  asmflags = cflags\n"
-                  
+
                   addition = """  # Force pure ARMv8.0 (no LSE/CRC/dotprod/SVE)
                   if (current_cpu == "arm64") {
                     cflags += [
@@ -195,6 +227,7 @@ jobs:
             echo 'angle_build_tests = false'
             echo 'angle_enable_vulkan = true'
             echo 'angle_enable_gl = false'
+            echo 'angle_expose_es32_for_testing = true'
             echo 'extra_cflags = [ "-march=armv8-a", "-mtune=generic", "-mno-outline-atomics" ]'
             echo 'extra_cxxflags = [ "-march=armv8-a", "-mtune=generic", "-mno-outline-atomics" ]'
             echo 'extra_asmflags = [ "-march=armv8-a" ]'
@@ -203,7 +236,7 @@ jobs:
           gn gen out/AndroidArmv8
           echo "GN gen OK"
           ls -la out/AndroidArmv8/
-          
+
       - name: Build ANGLE libraries / APK
         working-directory: ${{ github.workspace }}/angle
         run: |
