@@ -5222,6 +5222,15 @@ gl::Version Renderer::getMaxSupportedESVersion() const
 
     ensureCapsInitialized();
 
+    // PowerVR GE8320:
+    // The Vulkan driver is capable of running ANGLE's GLES3 path, but
+    // the conservative capability checks below can downgrade the exposed
+    // GLES version to 2.0.  We need GLES3 for MobileGLUES.
+    //
+    // Keep ANGLE's GLES3 implementation enabled while avoiding the
+    // conservative ES3 capability downgrade.
+    return gl::Version(3, 0);
+
     // Limit to ES3.1 if there are any blockers for 3.2.
     if (mFeatures.exposeES32ForTesting.enabled)
     {
