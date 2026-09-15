@@ -15,17 +15,49 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     env:
-      DEPOT_TOOLS_UPDATE: "1"
+      DEPOT_TOOLS_UPDATE: "0"
       DEPOT_TOOLS_METRICS: "0"
       GCLIENT_PY3: "1"
       DEBIAN_FRONTEND: "noninteractive"
 
     steps:
       - name: Check out ANGLE
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.1
         with:
           path: angle
           fetch-depth: 1
+
+      - name: Cache depot_tools
+        uses: actions/cache@v4
+        id: cache-depot-tools
+        with:
+          path: |
+            ~/depot_tools
+            ~/cache
+          key: depot-tools-ubuntu-24-04-${{ hashFiles('.github/workflows/angle-armv8.yml') }}
+          restore-keys: |
+            depot-tools-ubuntu-24-04-
+
+      - name: Cache Android NDK/SDK
+        uses: actions/cache@v4
+        id: cache-android-ndk
+        with:
+          path: |
+            angle/third_party/android_toolchain
+          key: android-ndk-26-${{ hashFiles('.github/workflows/angle-armv8.yml') }}
+          restore-keys: |
+            android-ndk-26-
+
+      - name: Cache Build Artifacts
+        uses: actions/cache@v4
+        id: cache-build
+        with:
+          path: |
+            angle/out
+            angle/obj
+          key: build-armv8-${{ github.sha }}
+          restore-keys: |
+            build-armv8-
 
       - name: Install Linux build dependencies
         run: |
@@ -39,6 +71,7 @@ jobs:
             python3 python3-pip unzip zip file binutils lsb-release
 
       - name: Bootstrap depot_tools
+        if: steps.cache-depot-tools.outputs.cache-hit != 'true'
         run: |
           rm -rf "$HOME/depot_tools"
           git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git "$HOME/depot_tools"
@@ -65,7 +98,6 @@ jobs:
           target_os = ["android"]
           EOF
 
-          # CORRECAO: Usar a revisao do proprio fork, nao do repositorio atual
           gclient sync --force --no-history --revision "angle@HEAD"
 
       - name: Install build deps + runhooks
@@ -81,7 +113,7 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           set -eux
-          export PATH="$HOME/depot_tools:$PATH"
+          export PATH="$HOME/depot_tools:$(pwd)/angle/buildtools/linux64:$PATH"
 
           mkdir -p angle/buildtools/linux64
 
@@ -182,14 +214,14 @@ jobs:
           which gn
           gn --version
 
-          # CORRECAO: Usar o args.gn pre-configurado do fork
+          mkdir -p out/AndroidArmv8
+
           if [ -f "args_android_armv80.gn" ]; then
             cp args_android_armv80.gn out/AndroidArmv8/args.gn
             echo "Using pre-configured args_android_armv80.gn"
           else
-            mkdir -p out/AndroidArmv8
             {
-              echo '\ntarget_os = "android"'
+              echo 'target_os = "android"'
               echo 'target_cpu = "arm64"'
               echo 'is_debug = false'
               echo 'is_component_build = false'
@@ -205,6 +237,7 @@ jobs:
               echo 'angle_build_tests = false'
               echo 'angle_enable_vulkan = true'
               echo 'angle_enable_gl = false'
+              echo 'angle_expose_es32_for_testing = true'
               echo 'extra_cflags = [ "-march=armv8-a", "-mtune=generic", "-mno-outline-atomics" ]'
               echo 'extra_cxxflags = [ "-march=armv8-a", "-mtune=generic", "-mno-outline-atomics" ]'
               echo 'extra_asmflags = [ "-march=armv8-a" ]'
@@ -268,7 +301,7 @@ jobs:
           done
 
       - name: Upload pure ARMv8.0 libraries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.3.0
         with:
           name: angle-arm64-armv8-0
           if-no-files-found: error
