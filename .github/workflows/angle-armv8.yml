@@ -172,7 +172,7 @@ jobs:
               print("No source patch required; GN flags will enforce ARMv8.0")
           PY
 
-- name: Generate ARMv8.0 GN build
+      - name: Generate ARMv8.0 GN build
         working-directory: ${{ github.workspace }}/angle
         shell: bash
         run: |
