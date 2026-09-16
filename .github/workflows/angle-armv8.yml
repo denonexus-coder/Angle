@@ -172,7 +172,7 @@ jobs:
               print("No source patch required; GN flags will enforce ARMv8.0")
           PY
 
-      - name: Generate ARMv8.0 GN build
+- name: Generate ARMv8.0 GN build
         working-directory: ${{ github.workspace }}/angle
         shell: bash
         run: |
@@ -186,20 +186,24 @@ jobs:
           cat > out/AndroidArmv8/args.gn <<'EOF'
           target_os = "android"
           target_cpu = "arm64"
+
           is_debug = false
-          is_component_build = false
-          is_official_build = false
           symbol_level = 0
+
           android32_ndk_api_level = 26
           android64_ndk_api_level = 26
+
           arm_control_flow_integrity = "none"
           use_thin_lto = false
           is_cfi = false
           use_remoteexec = false
+
           angle_assert_always_on = false
           angle_build_tests = false
+
           angle_enable_vulkan = true
           angle_enable_gl = false
+
           extra_cflags = [
             "-march=armv8-a",
             "-mtune=generic",
