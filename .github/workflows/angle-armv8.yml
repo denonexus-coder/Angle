@@ -43,10 +43,11 @@ jobs:
         id: cache-android-ndk
         with:
           path: |
-            angle/third_party/android_toolchain
-          key: android-ndk-26-${{ hashFiles('.github/workflows/angle-armv8.yml') }}
+            ~/android_ndk
+            ~/android_sdk
+          key: android-ndk-sdk-26-${{ hashFiles('.github/workflows/angle-armv8.yml') }}
           restore-keys: |
-            android-ndk-26-
+            android-ndk-sdk-26-
 
       - name: Cache Build Artifacts
         uses: actions/cache@v4
@@ -113,7 +114,7 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           set -eux
-          export PATH="$HOME/depot_tools:$(pwd)/angle/buildtools/linux64:$PATH"
+          export PATH="$HOME/depot_tools:$PATH"
 
           mkdir -p angle/buildtools/linux64
 
@@ -147,8 +148,6 @@ jobs:
           if [ -n "$GN_SRC" ]; then
             cp -v "$GN_SRC" angle/buildtools/linux64/gn
             chmod +x angle/buildtools/linux64/gn
-            ls -la angle/buildtools/linux64/
-            angle/buildtools/linux64/gn --version
           else
             echo "WARNING: CIPD failed, attempting to use depot_tools gn"
             which gn || exit 1
@@ -209,7 +208,7 @@ jobs:
         working-directory: ${{ github.workspace }}/angle
         run: |
           set -eux
-          export PATH="$HOME/depot_tools:$(pwd)/buildtools/linux64:$PATH"
+          export PATH="$HOME/depot_tools:$PATH"
 
           which gn
           gn --version
@@ -252,7 +251,7 @@ jobs:
         working-directory: ${{ github.workspace }}/angle
         run: |
           set -eux
-          export PATH="$HOME/depot_tools:$(pwd)/buildtools/linux64:$PATH"
+          export PATH="$HOME/depot_tools:$PATH"
 
           if autoninja -C out/AndroidArmv8 -t targets 2>/dev/null | grep -q 'angle_chromium_apk'; then
             autoninja -C out/AndroidArmv8 angle_chromium_apk
