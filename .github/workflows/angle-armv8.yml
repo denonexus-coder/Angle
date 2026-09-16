@@ -61,7 +61,6 @@ jobs:
           echo "$HOME/depot_tools" >> "$GITHUB_PATH"
           export PATH="$HOME/depot_tools:$PATH"
 
-          # Só valida que gclient existe — gn vem após gclient sync
           command -v gclient
           gclient --version
 
@@ -112,6 +111,8 @@ jobs:
           set -euxo pipefail
 
           export PATH="$HOME/depot_tools:$PATH"
+
+          "$HOME/depot_tools/ensure_bootstrap"
 
           command -v gn
           gn --version
@@ -178,6 +179,7 @@ jobs:
           set -euxo pipefail
 
           export PATH="$HOME/depot_tools:$PATH"
+          "$HOME/depot_tools/ensure_bootstrap"
 
           mkdir -p out/AndroidArmv8
 
