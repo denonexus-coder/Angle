@@ -258,9 +258,11 @@ jobs:
 
           export PATH="$HOME/depot_tools:$PATH"
 
-          autoninja \
-            -C out/AndroidArmv8 \
-            -t targets \
+          # depot_tools moderno usa siso e removeu `autoninja -t targets`;
+          # listamos os alvos diretamente com `gn ls` e deixamos so o nome.
+          gn ls out/AndroidArmv8 \
+            | sed -E 's/\(.*$//; s#.*[:/]##' \
+            | sort -u \
             > /tmp/angle-targets.txt
 
           echo "===== ANGLE TARGETS ====="
@@ -306,7 +308,7 @@ jobs:
             libGLESv2_thin_static \
             libEGL_static; do
 
-            if grep -q "^${TARGET}:" /tmp/angle-targets.txt; then
+            if grep -q "^${TARGET}$" /tmp/angle-targets.txt; then
               echo "Building: $TARGET"
               autoninja -C out/AndroidArmv8 "$TARGET" \
                 || echo "Failed: $TARGET"
