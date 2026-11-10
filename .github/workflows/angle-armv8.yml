@@ -233,11 +233,13 @@ jobs:
             \"-march=armv8-a\",
             \"-mtune=generic\",
             \"-mno-outline-atomics\",
+            \"-Wno-unreachable-code\",
           ]
           extra_cxxflags = [
             \"-march=armv8-a\",
             \"-mtune=generic\",
             \"-mno-outline-atomics\",
+            \"-Wno-unreachable-code\",
           ]
           extra_asmflags = [
             \"-march=armv8-a\",
